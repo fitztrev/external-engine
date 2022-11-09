@@ -2,7 +2,7 @@
 
 use std::{
     error::Error,
-    io::{BufReader, Read, Write},
+    io::{BufRead, BufReader, Read, Write},
     vec,
 };
 
@@ -63,35 +63,27 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut engine = std::process::Command::new("./stockfish")
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
-        .spawn()
-        .expect("Failed to start engine");
+        .spawn()?;
 
     println!("Engine started");
 
-    let engine_stdin = engine.stdin.as_mut().unwrap();
+    let engine_stdin = engine.stdin.as_mut().ok_or("Failed to get stdin")?;
 
     let _ = engine_stdin.write_all(format!("position fen {}\n", fen).as_bytes());
     let _ = engine_stdin.write_all(b"go depth 20\n");
 
-    engine_stdin.flush();
+    engine_stdin.flush()?;
 
-    let engine_stdout = engine.stdout.as_mut().unwrap();
+    let engine_stdout = engine.stdout.as_mut().ok_or("Failed to get stdout")?;
 
-    let mut buf = vec![];
-    for byte in engine_stdout.bytes() {
-        let byte = byte?;
-        if byte == b'\n' {
-            // process line
-            let output = String::from_utf8_lossy(&buf);
-            println!("Engine output: {}", output);
-
-            if output.contains("bestmove") {
-                println!("Found bestmove: {}", output);
-                break;
-            }
-            buf.clear();
-        } else {
-            buf.push(byte);
+    let mut reader = BufReader::new(engine_stdout);
+    loop {
+        let mut line = String::new();
+        let _ = reader.read_line(&mut line);
+        println!("Engine: {}", line.trim());
+        if line.contains("bestmove") {
+            println!("Found bestmove: {}", line);
+            break;
         }
     }
 
