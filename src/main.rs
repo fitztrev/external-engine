@@ -1,10 +1,9 @@
-#![allow(dead_code)]
-
 use std::{
     error::Error,
     io::{BufRead, BufReader, Write},
 };
 
+#[allow(dead_code)]
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct AnalysisRequest {
@@ -13,6 +12,7 @@ struct AnalysisRequest {
     engine: Engine,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Work {
@@ -26,6 +26,7 @@ struct Work {
     moves: Vec<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Engine {
