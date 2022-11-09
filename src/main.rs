@@ -2,8 +2,7 @@
 
 use std::{
     error::Error,
-    io::{BufRead, BufReader, Read, Write},
-    vec,
+    io::{BufRead, BufReader, Write},
 };
 
 #[derive(Debug, serde::Deserialize)]
@@ -52,10 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Step 2) Start a POST request stream to /api/external-engine/work/{id}
     // http://localhost:3000/api/external-engine/work/{}
-    let analysis_answer = reqwest::blocking::Client::new().post(&format!(
-        "http://localhost:3000/api/external-engine/work/{}",
-        analysis_request.id
-    ));
+    // todo
 
     // Step 3) Send the FEN to the engine
     let fen = analysis_request.work.initial_fen;
@@ -83,6 +79,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("Engine: {}", line.trim());
         if line.contains("info") {
             // Step 4) Send the "info" line to the server
+            // todo
         }
         if line.contains("bestmove") {
             println!("Found bestmove: {}", line);
