@@ -51,11 +51,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("{:#?}", analysis_request);
 
     // Step 2) Start a POST request stream to /api/external-engine/work/{id}
-    // let analysis_answer = reqwest::Client::new()
-    //     .post(format!(
-    //         "http://localhost:3000/api/external-engine/work/{}",
-    //         analysis_request.id
-    //     ))
+    // http://localhost:3000/api/external-engine/work/{}
+    let analysis_answer = reqwest::blocking::Client::new().post(&format!(
+        "http://localhost:3000/api/external-engine/work/{}",
+        analysis_request.id
+    ));
 
     // Step 3) Send the FEN to the engine
     let fen = analysis_request.work.initial_fen;
@@ -81,6 +81,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut line = String::new();
         let _ = reader.read_line(&mut line);
         println!("Engine: {}", line.trim());
+        if line.contains("info") {
+            // Step 4) Send the "info" line to the server
+        }
         if line.contains("bestmove") {
             println!("Found bestmove: {}", line);
             break;
