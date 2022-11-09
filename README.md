@@ -16,3 +16,10 @@ Then download and put Stockfish binary in the root of the project at filename `s
 ```
 cargo run
 ```
+
+
+
+
+./stockfish
+position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+go depth 20

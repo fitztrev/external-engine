@@ -1,5 +1,8 @@
+#![allow(dead_code)]
+
 use std::{
-    io::{Read, Write},
+    error::Error,
+    io::{BufReader, Read, Write},
     vec,
 };
 
@@ -8,7 +11,7 @@ use std::{
 struct AnalysisRequest {
     id: String,
     work: Work,
-    Engine: Engine,
+    engine: Engine,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -38,16 +41,12 @@ struct Engine {
     provider_data: String,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), reqwest::Error> {
+fn main() -> Result<(), Box<dyn Error>> {
     // Step 1) Long poll for analysis requests
     // When a move is made on the Analysis board, it will be returned from this endpoint
-    let analysis_request = reqwest::Client::new()
-        .get("http://localhost:3000/api/external-engine/work")
-        .send()
-        .await?
-        .json::<AnalysisRequest>()
-        .await?;
+    let analysis_request =
+        reqwest::blocking::get("http://localhost:3000/api/external-engine/work")?
+            .json::<AnalysisRequest>()?;
 
     println!("{:#?}", analysis_request);
 
@@ -69,29 +68,30 @@ async fn main() -> Result<(), reqwest::Error> {
 
     println!("Engine started");
 
-    let mut engine_stdin = engine.stdin.as_mut().unwrap();
+    let engine_stdin = engine.stdin.as_mut().unwrap();
 
     let _ = engine_stdin.write_all(format!("position fen {}\n", fen).as_bytes());
     let _ = engine_stdin.write_all(b"go depth 20\n");
 
     engine_stdin.flush();
 
-    loop {
-        let mut engine_stdout = engine.stdout.as_mut().unwrap();
+    let engine_stdout = engine.stdout.as_mut().unwrap();
 
-        let mut buf = vec![0; 500];
+    let mut buf = vec![];
+    for byte in engine_stdout.bytes() {
+        let byte = byte?;
+        if byte == b'\n' {
+            // process line
+            let output = String::from_utf8_lossy(&buf);
+            println!("Engine output: {}", output);
 
-        let bytes_returned = engine_stdout.read(&mut buf);
-        if String::from_utf8_lossy(&buf).contains("\n") {
-            println!("Found newline: {}", String::from_utf8_lossy(&buf));
-
-            // Step 4) Stream the `info` line back to the server
-            // todo
-
-            continue;
-        }
-        if String::from_utf8_lossy(&buf).contains("bestmove") {
-            break;
+            if output.contains("bestmove") {
+                println!("Found bestmove: {}", output);
+                break;
+            }
+            buf.clear();
+        } else {
+            buf.push(byte);
         }
     }
 
