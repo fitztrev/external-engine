@@ -19,7 +19,7 @@ cargo run
 
 ## Development
 
-Sample stockfish command:
+Sample stockfish command to see output:
 
 ```
 ./stockfish

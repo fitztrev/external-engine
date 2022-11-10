@@ -60,8 +60,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         .stdout(std::process::Stdio::piped())
         .spawn()?;
 
-    println!("Engine started");
-
     let engine_stdin = engine.stdin.as_mut().ok_or("Failed to get stdin")?;
 
     // Set UCI options
