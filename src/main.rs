@@ -53,10 +53,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Step 2) Start a POST request stream to /api/external-engine/work/{id}
     // http://localhost:3000/api/external-engine/work/{}
     // todo
-
+    
     // Step 3) Send the FEN to the engine
-    let fen = analysis_request.work.initial_fen;
-    println!("FEN: {}", fen);
     let mut engine = std::process::Command::new("./stockfish")
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
@@ -66,7 +64,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let engine_stdin = engine.stdin.as_mut().ok_or("Failed to get stdin")?;
 
-    let _ = engine_stdin.write_all(format!("position fen {}\n", fen).as_bytes());
+    // Set UCI options
+    engine_stdin.write_all(format!("setoption name Threads value {}\n", analysis_request.work.threads).as_bytes())?;
+    engine_stdin.write_all(format!("setoption name Hash value {}\n", analysis_request.work.hash).as_bytes())?;
+    engine_stdin.write_all(format!("setoption name MultiPV value {}\n", analysis_request.work.multi_pv).as_bytes())?;
+    engine_stdin.write_all(format!("setoption name Variant value {}\n", analysis_request.work.variant).as_bytes())?;
+
+    let _ = engine_stdin.write_all(format!("position fen {} moves {}\n", analysis_request.work.initial_fen, analysis_request.work.moves.join(" ")).as_bytes());
     let _ = engine_stdin.write_all(b"go depth 20\n");
 
     engine_stdin.flush()?;
