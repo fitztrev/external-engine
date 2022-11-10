@@ -67,10 +67,12 @@ struct WorkRequest {
 }
 
 const ENGINE_NAME: &str = "Rust Test Engine";
+const LICHESS_HOST: &str = "https://lichess.org";
+const ENGINE_HOST: &str = "https://engine.lichess.ovh";
 
 fn register_engine(client: &Client) -> Result<String, Box<dyn Error>> {
     let engines = client
-        .get("https://lichess.org/api/external-engine")
+        .get(format!("{}/api/external-engine", LICHESS_HOST))
         .send()?
         .json::<Vec<Engine>>()?;
 
@@ -95,8 +97,8 @@ fn register_engine(client: &Client) -> Result<String, Box<dyn Error>> {
             println!("Updating engine {}", engine.id);
             client
                 .put(format!(
-                    "https://lichess.org/api/external-engine/{}",
-                    engine.id
+                    "{}/api/external-engine/{}",
+                    LICHESS_HOST, engine.id
                 ))
                 .json(&registration)
                 .send()?;
@@ -106,7 +108,7 @@ fn register_engine(client: &Client) -> Result<String, Box<dyn Error>> {
 
     println!("Registering new engine");
     client
-        .post("https://lichess.org/api/external-engine")
+        .post(format!("{}/api/external-engine", LICHESS_HOST))
         .json(&registration)
         .send()?;
 
@@ -117,7 +119,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let auth_header = if let Some(token) = std::env::args().nth(1) {
         format!("Bearer {token}")
     } else {
-        println!("Pass token from https://lichess.org/account/oauth/token/create?scopes[]=engine:read&scopes[]=engine:write as argument");
+        println!("Pass token from {}/account/oauth/token/create?scopes[]=engine:read&scopes[]=engine:write as argument", LICHESS_HOST);
         return Ok(());
     };
     let mut default_headers = HeaderMap::new();
@@ -132,7 +134,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         // Step 1) Long poll for analysis requests
         // When a move is made on the Analysis board, it will be returned from this endpoint
         let response = client
-            .post("https://engine.lichess.ovh/api/external-engine/work")
+            .post(format!("{}/api/external-engine/work", ENGINE_HOST))
             .json(&WorkRequest {
                 provider_secret: provider_secret.clone(),
             })
@@ -204,8 +206,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             // Step 3) Start a POST request stream to /api/external-engine/work/{id}
             client
                 .post(format!(
-                    "https://engine.lichess.ovh/api/external-engine/work/{}",
-                    analysis_request.id
+                    "{}/api/external-engine/work/{}",
+                    ENGINE_HOST, analysis_request.id
                 ))
                 .body(Body::new(iter_read::IterRead::new(rx.into_iter().fuse())))
                 .send()
