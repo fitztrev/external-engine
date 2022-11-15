@@ -67,6 +67,7 @@ struct WorkRequest {
 }
 
 const ENGINE_NAME: &str = "Rust Test Engine";
+const ENGINE_BINARY: &str = "./stockfish";
 const LICHESS_HOST: &str = "https://lichess.org";
 const ENGINE_HOST: &str = "https://engine.lichess.ovh";
 
@@ -148,7 +149,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("{analysis_request:#?}");
 
         // Step 2) Send the FEN to the engine
-        let mut engine = Command::new("./stockfish")
+        let mut engine = Command::new(ENGINE_BINARY)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()?;
