@@ -1,10 +1,10 @@
-## Setup
+## Run
 
-Download and put Stockfish binary in the root of the project at filename `stockfish`.
+1. Download and put Stockfish binary in the root of this project at filename `stockfish`.
+2. Generate API token with `engine:read` and `engine:write` scopes.
+3. Run:
 
-```
-cargo run
-```
+    cargo run lip_token_here
 
 ## Development
 
